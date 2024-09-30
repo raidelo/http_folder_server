@@ -1,6 +1,17 @@
 from http import server
 from os import getcwd
 
+def parse_logs_file(logs_file:str, default_value:str):
+    if isinstance(logs_file, str):
+        if logs_file.strip().lower() in ['true', '1', 'activate', 'on']:
+            return default_value
+        elif logs_file.strip().lower() in ['false', '0', 'deactivate', 'off']:
+            return False
+        else:
+            return logs_file
+    else:
+        return default_value if logs_file else logs_file
+
 class MainHandler(server.SimpleHTTPRequestHandler):
     def __init__(self, request, address, server, directory=None, logs_file=None):
         self.directory = directory or getcwd()
@@ -60,17 +71,18 @@ def main(address=('0.0.0.0', 80), directory=None, logs_file=None):
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
+    default_logs_file = 'shttp_server.log'
     parser.add_argument('-b', '-a', '--bind', '--address', default='0.0.0.0', metavar='ADDRESS', dest='address',
                         help='bind to this address '
                              '(default: all interfaces)')
     parser.add_argument('port', default=80, type=int, nargs='?',
                         help='bind to this port '
                              '(default: %(default)s)')
-    parser.add_argument('--logs-file', default='shttp_server.log', dest='logs_file',
+    parser.add_argument('--logs-file', default=default_logs_file, dest='logs_file',
                         help='logs file '
                              '(default: %(default)s)')
     parser.add_argument('-d', '--directory', default=getcwd(), dest='directory',
                         help='serve this directory '
                              '(default: current directory)')
     args = parser.parse_args()
-    main((args.address, args.port), args.directory, args.logs_file)
+    main((args.address, args.port), args.directory, parse_logs_file(args.logs_file, default_logs_file))
